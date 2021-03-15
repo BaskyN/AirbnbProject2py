@@ -1,7 +1,7 @@
 import sqlite3
 
 # This Program allows a user to enter new details about a property following a series of prompts.
-# The databases will update after completion.  Hit run and follow instructions.
+# The databases will update after completion.
 # Check FindListing.py to check new entry has been added to the tables.
 # The NewListing class inherits a connection to the database from the DBConnect class
 
@@ -17,12 +17,6 @@ class NewListing(Commit):
         self.host_name = input("Enter Host Name:")
         while True:
             try:
-                self.host_id = int(input("Enter New Host ID (10 digit number): "))
-                break
-            except ValueError:
-                print("Please input number only...")
-        while True:
-            try:
                 self.calculated_host_listings_count = int(input("Enter Listing Count on Airbnb as a number:"))
                 break
             except ValueError:
@@ -30,7 +24,6 @@ class NewListing(Commit):
             continue
 
     def PrintHost(self):
-        print("Host ID: ", self.host_id)
         print("Name: ", self.host_name)
         print("Current Listing Count: ", self.calculated_host_listings_count)
         print("You have successfully added your host details, now complete the listing details")
@@ -83,31 +76,37 @@ class NewListing(Commit):
         print("Neighbourhood", self.neighbourhood)
 
     def StoreHostDetails(self):
-        sql_clause = "INSERT INTO hosts (host_id, host_name, calculated_host_listings_count) VALUES (?, ?, ?)"
-        values = (self.host_id, self.host_name, self.calculated_host_listings_count)
+        sql_clause = "INSERT INTO hosts (host_name, calculated_host_listings_count) VALUES (?, ?)"
+        values = (self.host_name, self.calculated_host_listings_count)
         self.cursor.execute(sql_clause, values)
         self.conn.commit()
         print('Host details saved to database')
+        return self.cursor.lastrowid
 
     def StoreListingDetails(self):
         sql = """INSERT INTO airbnb (host_id, name, latitude, longitude,
         room_type, price, minimum_nights, number_of_reviews, last_review, 
         reviews_per_month, availability_365) VALUES 
-        (?,?,?,?,?,?,?,?,?,?,?,?)"""
-        values = (self.host_id, self.name, self.latitude, self.longitude, self.room_type,
+        (?,?,?,?,?,?,?,?,?,?,?)"""
+        values = (self.name, self.latitude, self.longitude, self.room_type,
                   self.price, self.minimum_nights, self.number_of_reviews,
                   self.last_review, self.reviews_per_month,
                   self.availability_365)
-        self.cursor.execute(sql, values)
+        self.cursor.execute(sql, (self.cursor.lastrowid,) + values)
         self.conn.commit()
         print('Listing details saved to database')
 
     def StoreLocationDetails(self):
-        sql_clause = """INSERT INTO locations (neighbourhood, neighbourhood_group) VALUES (?,?)"""
-        values = (self.neighbourhood, self.neighbourhood_group)
-        self.cursor.execute(sql_clause, values)
-        self.conn.commit()
-        print('Locations details saved to database')
+
+    sql_clause = f'UPDATE airbnb SET location_id = (SELECT location_id FROM locations' \
+                 f'WHERE neighbourhood = self.neighbourhood AND neighbourhood_group = ' \
+                 f'self.neighbourhood_group)'
+    values = (self.neighbourhood, self.neighbourhood_group)
+    self.cursor.execute(sql_clause, (self.cursor.lastrowid,))
+    self.conn.commit()
+    print('Locations ID saved')
+
+# How do I update last entry in database with the location_id value from the locations table?
 
 
 new = NewListing()
@@ -118,4 +117,5 @@ new.AddLocation()
 new.PrintLocation()
 new.StoreHostDetails()
 new.StoreListingDetails()
-new.StoreLocationDetails()
+
+

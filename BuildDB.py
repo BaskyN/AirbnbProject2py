@@ -53,7 +53,9 @@ class CreateTables(DBConnection):
         sql_clause = f'CREATE TABLE IF NOT EXISTS airbnb (id INTEGER PRIMARY KEY, host_id INTEGER,' \
                      f'location_id INTEGER, name TEXT, latitude TEXT, longitude TEXT, room_type TEXT,' \
                      f'price INTEGER, minimum_nights INTEGER, number_of_reviews INTEGER, last_review INTEGER,' \
-                     f'reviews_per_month INTEGER, availability_365 INTEGER);'
+                     f'reviews_per_month INTEGER, availability_365 INTEGER, FOREIGN KEY (host_id) ' \
+                     f'REFERENCES hosts(host_id), FOREIGN KEY (location_id) REFERENCES locations(location_id));'
+
         self.cursor.execute(sql_clause)
         print("Listings Table Created in AirBnb Database")
 
