@@ -96,17 +96,13 @@ class NewListing(Commit):
         self.conn.commit()
         print('Listing details saved to database')
 
-    def StoreLocationDetails(self):
-
-    sql_clause = f'UPDATE airbnb SET location_id = (SELECT location_id FROM locations' \
-                 f'WHERE neighbourhood = self.neighbourhood AND neighbourhood_group = ' \
-                 f'self.neighbourhood_group)'
-    values = (self.neighbourhood, self.neighbourhood_group)
-    self.cursor.execute(sql_clause, (self.cursor.lastrowid,))
-    self.conn.commit()
-    print('Locations ID saved')
-
-# How do I update last entry in database with the location_id value from the locations table?
+    def StoreLocationsID(self):
+        sql_clause = f"INSERT INTO airbnb (location_id) SELECT location_id FROM locations " \
+                     f"WHERE neighbourhood = ? AND neighbourhood_group = ?"
+        values = (self.neighbourhood_group, self.neighbourhood)
+        self.cursor.execute(sql_clause, values)
+        self.conn.commit()
+        print('Host details saved to database')
 
 
 new = NewListing()
@@ -117,5 +113,6 @@ new.AddLocation()
 new.PrintLocation()
 new.StoreHostDetails()
 new.StoreListingDetails()
+new.StoreLocationsID()
 
 
